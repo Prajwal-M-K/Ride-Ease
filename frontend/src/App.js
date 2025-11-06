@@ -102,11 +102,11 @@ function App() {
           />
           <Route 
             path="/stations" 
-            element={user ? <Stations /> : <Navigate to="/login" />} 
+            element={user ? <Stations user={user} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/vehicles" 
-            element={user ? <Vehicles /> : <Navigate to="/login" />} 
+            element={user ? <Vehicles user={user} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/book" 

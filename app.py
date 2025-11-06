@@ -12,24 +12,49 @@ def create_db_connection():
     connection = mysql.connector.connect(
         host="localhost",
         user="root",  # e.g., 'root'
-        password="Paendrag@1711",
+        password="WJ28@krhps",
         database="ev_rental_db"
     )
     return connection
 
 @app.route('/api/vehicles/<int:vehicle_id>/report', methods=['POST'])
 def report_vehicle_issue(vehicle_id):
+    """
+    Reports a vehicle issue. Users can only report issues for vehicles they have an ongoing ride with.
+    Admins can report issues for any vehicle.
+    """
     try:
         data = request.get_json()
         issue = data['IssueReported']
+        user_id = data.get('user_id')  # Get user_id from request
+        user_role = data.get('user_role', 'user')  # Get user role
+        
+        if not user_id:
+            return jsonify({"error": "User ID required"}), 400
+        
         connection = create_db_connection()
         cursor = connection.cursor(dictionary=True)
+        
+        # If user is not admin, check if they have an ongoing ride with this vehicle
+        if user_role != 'admin':
+            cursor.execute("""
+                SELECT TripID FROM Trips 
+                WHERE UserID = %s AND VehicleID = %s AND Status = 'Ongoing'
+            """, (user_id, vehicle_id))
+            ongoing_trip = cursor.fetchone()
+            
+            if not ongoing_trip:
+                cursor.close()
+                connection.close()
+                return jsonify({"error": "You can only report issues for vehicles you have an ongoing ride with"}), 403
+        
         cursor.callproc('sp_ReportAndAssignMaintenance', [vehicle_id, issue])
         connection.commit()
-        return jsonify({"message": f"Issue for vehicle {vehicle_id} reported successfully. A technician has been assigned."})
-    finally:
         cursor.close()
         connection.close()
+        return jsonify({"message": f"Issue for vehicle {vehicle_id} reported successfully. A technician has been assigned."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
     
 
 @app.route('/api/register', methods=['POST'])
@@ -68,8 +93,8 @@ def login_user():
         conn = create_db_connection()
         cur = conn.cursor(dictionary=True)
 
-        # Include WalletBalance and JoinDate for a consistent user object on the client
-        cur.execute("SELECT UserID, Name, Email, WalletBalance, JoinDate, Password FROM Users WHERE Email = %s", (email,))
+        # Include WalletBalance, JoinDate, and Role for a consistent user object on the client
+        cur.execute("SELECT UserID, Name, Email, WalletBalance, JoinDate, Password, Role FROM Users WHERE Email = %s", (email,))
         user = cur.fetchone()
 
         if not user:
@@ -158,12 +183,13 @@ def get_user_history(user_id):
 @app.route('/api/user/<int:user_id>/profile', methods=['GET'])
 def get_user_profile(user_id):
     """
-    Gets a user's profile information (name, email, wallet, join date).
+    Gets a user's profile information (name, email, wallet, join date, role).
+    Including Role ensures the client retains admin capabilities after refreshes.
     """
     try:
         conn = create_db_connection()
         cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT UserID, Name, Email, WalletBalance, JoinDate FROM Users WHERE UserID = %s", (user_id,))
+        cur.execute("SELECT UserID, Name, Email, WalletBalance, JoinDate, Role FROM Users WHERE UserID = %s", (user_id,))
         user = cur.fetchone()
         
         if not user:
@@ -365,24 +391,6 @@ def get_stations():
         conn.close()
 
 
-@app.route('/api/stations/<int:station_id>/deactivate', methods=['PUT'])
-def deactivate_station(station_id):
-    """
-    Deactivates a station by setting IsActive to FALSE.
-    """
-    try:
-        conn = create_db_connection()
-        cur = conn.cursor()
-        cur.execute("UPDATE Stations SET IsActive = FALSE WHERE StationID = %s", (station_id,))
-        if cur.rowcount == 0:
-            return jsonify({"error": "Station not found"}), 404
-        conn.commit()
-        return jsonify({"message": f"Station {station_id} deactivated successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-    finally:
-        cur.close()
-        conn.close()
 
 
 @app.route('/api/vehicles', methods=['GET'])
@@ -407,20 +415,136 @@ def get_vehicles():
 def decommission_vehicle(vehicle_id):
     """
     Decommissions a vehicle by setting Status to 'decommissioned'.
+    Admin only.
     """
     try:
+        data = request.get_json() or {}
+        user_role = data.get('user_role', 'user')
+        
+        if user_role != 'admin':
+            return jsonify({"error": "Admin access required"}), 403
+        
         conn = create_db_connection()
         cur = conn.cursor()
         cur.execute("UPDATE Vehicles SET Status = 'decommissioned' WHERE VehicleID = %s", (vehicle_id,))
         if cur.rowcount == 0:
+            cur.close()
+            conn.close()
             return jsonify({"error": "Vehicle not found"}), 404
         conn.commit()
+        cur.close()
+        conn.close()
         return jsonify({"message": f"Vehicle {vehicle_id} decommissioned successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    finally:
+
+# Admin-only routes for stations
+@app.route('/api/stations', methods=['POST'])
+def add_station():
+    """
+    Adds a new station. Admin only.
+    """
+    try:
+        data = request.get_json()
+        user_role = data.get('user_role', 'user')
+        
+        if user_role != 'admin':
+            return jsonify({"error": "Admin access required"}), 403
+        
+        name = data.get('name')
+        location = data.get('location')
+        capacity = data.get('capacity')
+        
+        if not all([name, location, capacity]):
+            return jsonify({"error": "Name, location, and capacity are required"}), 400
+        
+        conn = create_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO Stations (Name, Location, Capacity, IsActive)
+            VALUES (%s, %s, %s, TRUE)
+        """, (name, location, capacity))
+        conn.commit()
+        station_id = cur.lastrowid
         cur.close()
         conn.close()
+        return jsonify({"message": "Station added successfully", "station_id": station_id}), 201
+    except mysql.connector.IntegrityError:
+        return jsonify({"error": "Station name already exists"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    # Note: Hard delete endpoint removed to prevent destructive operations.
+
+@app.route('/api/stations/<int:station_id>/deactivate', methods=['PUT'])
+def deactivate_station(station_id):
+    """
+    Deactivates a station by setting IsActive to FALSE.
+    Admin only.
+    """
+    try:
+        data = request.get_json() or {}
+        user_role = data.get('user_role', 'user')
+        
+        if user_role != 'admin':
+            return jsonify({"error": "Admin access required"}), 403
+        
+        conn = create_db_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE Stations SET IsActive = FALSE WHERE StationID = %s", (station_id,))
+        if cur.rowcount == 0:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Station not found"}), 404
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": f"Station {station_id} deactivated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        if 'cur' in locals():
+            cur.close()
+        if 'conn' in locals():
+            conn.close()
+
+# Admin-only routes for vehicles
+@app.route('/api/vehicles', methods=['POST'])
+def add_vehicle():
+    """
+    Adds a new vehicle. Admin only.
+    """
+    try:
+        data = request.get_json()
+        user_role = data.get('user_role', 'user')
+        
+        if user_role != 'admin':
+            return jsonify({"error": "Admin access required"}), 403
+        
+        vehicle_type = data.get('type')
+        model = data.get('model')
+        manufacturer = data.get('manufacturer')
+        rate_per_hour = data.get('rate_per_hour')
+        station_id = data.get('station_id')
+        
+        if not all([vehicle_type, model, manufacturer, rate_per_hour]):
+            return jsonify({"error": "Type, model, manufacturer, and rate_per_hour are required"}), 400
+        
+        conn = create_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO Vehicles (Type, Model, Manufacturer, RatePerHour, Status, CurrentStationID)
+            VALUES (%s, %s, %s, %s, 'available', %s)
+        """, (vehicle_type, model, manufacturer, rate_per_hour, station_id))
+        conn.commit()
+        vehicle_id = cur.lastrowid
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Vehicle added successfully", "vehicle_id": vehicle_id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    # Note: Hard delete endpoint removed; use decommission instead.
 
 
 if __name__ == '__main__':

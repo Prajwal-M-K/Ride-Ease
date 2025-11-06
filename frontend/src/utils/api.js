@@ -26,8 +26,21 @@ export const getStations = async () => {
   return response.data;
 };
 
-export const deactivateStation = async (stationId) => {
-  const response = await api.put(`/stations/${stationId}/deactivate`);
+export const addStation = async (name, location, capacity, userRole) => {
+  const response = await api.post('/stations', {
+    name,
+    location,
+    capacity,
+    user_role: userRole,
+  });
+  return response.data;
+};
+
+
+export const deactivateStation = async (stationId, userRole) => {
+  const response = await api.put(`/stations/${stationId}/deactivate`, {
+    user_role: userRole,
+  });
   return response.data;
 };
 
@@ -42,14 +55,31 @@ export const getVehicles = async () => {
   return response.data;
 };
 
-export const decommissionVehicle = async (vehicleId) => {
-  const response = await api.put(`/vehicles/${vehicleId}/decommission`);
+export const addVehicle = async (type, model, manufacturer, ratePerHour, stationId, userRole) => {
+  const response = await api.post('/vehicles', {
+    type,
+    model,
+    manufacturer,
+    rate_per_hour: ratePerHour,
+    station_id: stationId,
+    user_role: userRole,
+  });
   return response.data;
 };
 
-export const reportVehicleIssue = async (vehicleId, issueReported) => {
+
+export const decommissionVehicle = async (vehicleId, userRole) => {
+  const response = await api.put(`/vehicles/${vehicleId}/decommission`, {
+    user_role: userRole,
+  });
+  return response.data;
+};
+
+export const reportVehicleIssue = async (vehicleId, issueReported, userId, userRole) => {
   const response = await api.post(`/vehicles/${vehicleId}/report`, {
     IssueReported: issueReported,
+    user_id: userId,
+    user_role: userRole,
   });
   return response.data;
 };

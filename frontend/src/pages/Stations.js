@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getStations, deactivateStation } from '../utils/api';
+import { getStations, addStation, deactivateStation } from '../utils/api';
 
-const Stations = () => {
+const Stations = ({ user }) => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newStation, setNewStation] = useState({ name: '', location: '', capacity: '' });
 
   useEffect(() => {
     fetchStations();
@@ -30,7 +32,7 @@ const Stations = () => {
     }
 
     try {
-      await deactivateStation(stationId);
+      await deactivateStation(stationId, user?.Role);
       setSuccess(`Station ${stationName} has been deactivated successfully.`);
       fetchStations();
       setTimeout(() => setSuccess(''), 3000);
@@ -39,6 +41,24 @@ const Stations = () => {
       setTimeout(() => setError(''), 3000);
     }
   };
+
+
+  const handleAddStation = async (e) => {
+    e.preventDefault();
+    try {
+      await addStation(newStation.name, newStation.location, parseInt(newStation.capacity), user?.Role);
+      setSuccess('Station added successfully.');
+      setNewStation({ name: '', location: '', capacity: '' });
+      setShowAddModal(false);
+      fetchStations();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to add station');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const isAdmin = user?.Role === 'admin';
 
   if (loading) {
     return (
@@ -50,9 +70,19 @@ const Stations = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Stations</h1>
-        <p className="mt-2 text-gray-600">View and manage EV charging stations</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Stations</h1>
+          <p className="mt-2 text-gray-600">View and manage EV charging stations</p>
+        </div>
+        {isAdmin && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md font-medium"
+          >
+            + Add Station
+          </button>
+        )}
       </div>
 
       {error && (
@@ -93,15 +123,77 @@ const Stations = () => {
                     <p className="text-lg font-semibold text-primary-600">{station.AvailableVehicles}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeactivate(station.StationID, station.Name)}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md transition"
-                >
-                  Deactivate Station
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDeactivate(station.StationID, station.Name)}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md transition"
+                  >
+                    Deactivate Station
+                  </button>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Add Station Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Add New Station</h3>
+            <form onSubmit={handleAddStation}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={newStation.name}
+                  onChange={(e) => setNewStation({ ...newStation, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  value={newStation.location}
+                  onChange={(e) => setNewStation({ ...newStation, location: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newStation.capacity}
+                  onChange={(e) => setNewStation({ ...newStation, capacity: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition"
+                >
+                  Add Station
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewStation({ name: '', location: '', capacity: '' });
+                  }}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
