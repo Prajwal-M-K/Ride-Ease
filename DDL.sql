@@ -106,3 +106,6 @@ ADD COLUMN Password VARCHAR(100) NOT NULL AFTER Email;
 -- Add Role column for user/admin distinction
 ALTER TABLE Users
 ADD COLUMN Role ENUM('user', 'admin') NOT NULL DEFAULT 'user' AFTER Password;
+
+ALTER TABLE Trips
+MODIFY COLUMN Status ENUM('Upcoming','Ongoing','Completed','Cancelled') NOT NULL DEFAULT 'Upcoming';
