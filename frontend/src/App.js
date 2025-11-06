@@ -12,6 +12,7 @@ import ActiveRide from './pages/ActiveRide';
 import Profile from './pages/Profile';
 import Technicians from './pages/Technicians';
 import Membership from './pages/Membership';
+import Logs from './pages/Logs';
 import { getUserProfile } from './utils/api';
 import './App.css';
 
@@ -78,9 +79,12 @@ function App() {
   const handleLogout = () => {
     // Invalidate any in-flight async updates
     sessionRef.current += 1;
+    // Clear state and localStorage immediately
+    localStorage.removeItem('user');
     setUser(null);
     setActiveTrip(null);
-    localStorage.removeItem('user');
+    // Force a hard redirect to login to avoid any race conditions with React Router
+    window.location.href = '/login';
   };
 
   const handleRideEnded = async () => {
@@ -171,6 +175,10 @@ function App() {
           <Route 
             path="/technicians" 
             element={user ? (!user.PlanID ? <Navigate to="/membership" /> : <Technicians user={user} />) : <Navigate to="/login" />} 
+          />
+          <Route
+            path="/logs"
+            element={user ? (!user.PlanID ? <Navigate to="/membership" /> : (user.Role === 'admin' ? <Logs user={user} /> : <Navigate to="/dashboard" />)) : <Navigate to="/login" />} 
           />
           <Route 
             path="/" 

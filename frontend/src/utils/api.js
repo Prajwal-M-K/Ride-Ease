@@ -206,4 +206,13 @@ export const completeMaintenanceLog = async (logId, userRole) => {
   return response.data;
 };
 
+// Logs APIs (Admin only)
+export const getLogs = async (userRole, { table = null, limit = 100 } = {}) => {
+  const params = { user_role: userRole };
+  if (table) params.table = table;
+  if (limit) params.limit = limit;
+  const response = await api.get('/logs', { params });
+  return response.data;
+};
+
 export default api;

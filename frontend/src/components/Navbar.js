@@ -1,13 +1,9 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Navbar = ({ user, onLogout, activeTrip }) => {
-  const navigate = useNavigate();
-
   const handleLogout = () => {
     onLogout();
-    // Replace history entry to avoid back navigation restoring dashboard
-    navigate('/login', { replace: true });
   };
 
   // Normalize wallet balance to a number for safe formatting
@@ -62,6 +58,14 @@ const Navbar = ({ user, onLogout, activeTrip }) => {
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white/80 hover:text-accent-400"
                 >
                   Technicians
+                </Link>
+              )}
+              {user?.Role === 'admin' && (
+                <Link
+                  to="/logs"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white/80 hover:text-accent-400"
+                >
+                  Logs
                 </Link>
               )}
               {activeTrip && (

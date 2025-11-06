@@ -12,7 +12,7 @@ def create_db_connection():
     connection = mysql.connector.connect(
         host="localhost",
         user="root",  # e.g., 'root'
-        password="Paendrag@1711",
+        password="WJ28@krhps",
         database="ev_rental_db"
     )
     return connection
@@ -889,6 +889,62 @@ def complete_maintenance_log(log_id):
             conn.rollback()
         return jsonify({"error": str(e)}), 400
 
+
+@app.route('/api/logs', methods=['GET'])
+@app.route('/api/logs/', methods=['GET'])
+def get_logs():
+    """
+    Returns recent audit logs. Admin only.
+    Optional query params:
+      - table: filter by TableName
+      - limit: max rows (default 100, max 500)
+    """
+    try:
+        # Prefer query param; parse JSON silently if present for flexibility
+        data = request.get_json(silent=True) or {}
+        user_role = data.get('user_role') or request.args.get('user_role', 'user')
+
+        if user_role != 'admin':
+            return jsonify({"error": "Admin access required"}), 403
+
+        table = request.args.get('table') or data.get('table')
+        try:
+            limit = int(request.args.get('limit') or data.get('limit') or 100)
+        except (TypeError, ValueError):
+            limit = 100
+        limit = max(1, min(limit, 500))
+
+        conn = create_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        if table:
+            cur.execute(
+                """
+                SELECT LogID, TableName, OperationType, RecordID, ChangedBy, ChangeDescription, ChangeTimestamp
+                FROM Logs
+                WHERE TableName = %s
+                ORDER BY ChangeTimestamp DESC, LogID DESC
+                LIMIT %s
+                """,
+                (table, limit),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT LogID, TableName, OperationType, RecordID, ChangedBy, ChangeDescription, ChangeTimestamp
+                FROM Logs
+                ORDER BY ChangeTimestamp DESC, LogID DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+
+        logs = cur.fetchall()
+        cur.close()
+        conn.close()
+        return jsonify(logs), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)
