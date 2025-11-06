@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getStations, getVehicles, getUserRides } from '../utils/api';
 
@@ -11,11 +11,7 @@ const Dashboard = ({ user, onUserUpdate }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [stations, vehicles, rides] = await Promise.all([
         getStations(),
@@ -39,7 +35,11 @@ const Dashboard = ({ user, onUserUpdate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, onUserUpdate]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (
@@ -74,8 +74,8 @@ const Dashboard = ({ user, onUserUpdate }) => {
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -109,7 +109,7 @@ const Dashboard = ({ user, onUserUpdate }) => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Wallet Balance</p>
-              <p className="text-2xl font-bold text-gray-900">${Number.isFinite(parseFloat(user.WalletBalance)) ? parseFloat(user.WalletBalance).toFixed(2) : '0.00'}</p>
+              <p className="text-2xl font-bold text-gray-900">₹{Number.isFinite(parseFloat(user.WalletBalance)) ? parseFloat(user.WalletBalance).toFixed(2) : '0.00'}</p>
             </div>
           </div>
         </div>
@@ -118,14 +118,14 @@ const Dashboard = ({ user, onUserUpdate }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Link
           to="/book"
-          className="bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow"
+          className="bg-gradient-to-r from-primary-700 to-primary-800 text-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow"
         >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-2xl font-bold mb-2">Book a Ride</h3>
-              <p className="text-primary-100">Start your EV adventure</p>
+              <p className="text-gray-300">Start your EV adventure</p>
             </div>
-            <svg className="w-12 h-12 text-primary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </div>
@@ -155,7 +155,7 @@ const Dashboard = ({ user, onUserUpdate }) => {
           </div>
           <Link
             to="/profile"
-            className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition"
+            className="bg-primary-700 hover:bg-primary-800 text-white px-6 py-3 rounded-lg font-medium transition"
           >
             Go to Profile
           </Link>

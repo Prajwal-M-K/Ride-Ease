@@ -52,7 +52,8 @@ const BookRide = ({ user, onBookingComplete, onUserUpdate }) => {
     if (!selectedVehicle) return 0;
     const rate = parseFloat(selectedVehicle.RatePerHour);
     const hours = parseFloat(durationHours) || 0;
-    return rate * hours;
+    const discount = Number.isFinite(parseFloat(user?.PlanDiscount)) ? parseFloat(user.PlanDiscount) : 0;
+    return (rate * hours) * (1 - discount);
   };
   const calculateCost = () => calculateCostNumber().toFixed(2);
 
@@ -123,8 +124,8 @@ const BookRide = ({ user, onBookingComplete, onUserUpdate }) => {
                 onClick={() => handleStationSelect(station.StationID)}
                 className={`w-full text-left p-4 border-2 rounded-lg transition ${
                   selectedStation?.StationID === station.StationID
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-primary-300'
+                    ? 'border-accent-500 bg-accent-50'
+                    : 'border-gray-200 hover:border-accent-300'
                 }`}
               >
                 <div className="flex justify-between items-center">
@@ -134,7 +135,7 @@ const BookRide = ({ user, onBookingComplete, onUserUpdate }) => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-500">Available</p>
-                    <p className="text-lg font-bold text-primary-600">{station.AvailableVehicles}</p>
+                    <p className="text-lg font-bold text-accent-600">{station.AvailableVehicles}</p>
                   </div>
                 </div>
               </button>
@@ -165,8 +166,8 @@ const BookRide = ({ user, onBookingComplete, onUserUpdate }) => {
                   onClick={() => setSelectedVehicle(vehicle)}
                   className={`w-full text-left p-4 border-2 rounded-lg transition ${
                     selectedVehicle?.VehicleID === vehicle.VehicleID
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-primary-300'
+                      ? 'border-accent-500 bg-accent-50'
+                      : 'border-gray-200 hover:border-accent-300'
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -176,7 +177,7 @@ const BookRide = ({ user, onBookingComplete, onUserUpdate }) => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-500">Rate</p>
-                      <p className="text-lg font-bold text-primary-600">${vehicle.RatePerHour}/hr</p>
+                      <p className="text-lg font-bold text-accent-600">₹{vehicle.RatePerHour}/hr</p>
                     </div>
                   </div>
                 </button>
@@ -207,23 +208,23 @@ const BookRide = ({ user, onBookingComplete, onUserUpdate }) => {
                 max="24"
                 value={durationHours}
                 onChange={(e) => setDurationHours(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-accent-500 focus:border-accent-500"
               />
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Cost</p>
-              <p className="text-2xl font-bold text-primary-600">${calculateCost()}</p>
+              <p className="text-2xl font-bold text-accent-600">₹{calculateCost()}</p>
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <p className="text-gray-600">Wallet Balance</p>
-              <p className="font-semibold text-gray-900">${Number.isFinite(parseFloat(user.WalletBalance)) ? parseFloat(user.WalletBalance).toFixed(2) : '0.00'}</p>
+              <p className="font-semibold text-gray-900">₹{Number.isFinite(parseFloat(user.WalletBalance)) ? parseFloat(user.WalletBalance).toFixed(2) : '0.00'}</p>
             </div>
             <button
               onClick={handleBook}
               disabled={booking || parseFloat(user.WalletBalance) < calculateCostNumber()}
-              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition"
+                className="w-full bg-primary-700 hover:bg-primary-800 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition"
             >
               {booking ? 'Booking...' : 'Confirm Booking'}
             </button>

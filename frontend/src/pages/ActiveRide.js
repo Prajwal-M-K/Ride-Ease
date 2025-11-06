@@ -84,9 +84,9 @@ const ActiveRide = ({ trip, user, onRideEnded, onUserUpdate }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg shadow-lg p-8 mb-6">
+      <div className="bg-gradient-to-r from-primary-700 to-primary-800 text-white rounded-lg shadow-lg p-8 mb-6">
         <h1 className="text-3xl font-bold mb-2">🚴 Active Ride</h1>
-        <p className="text-primary-100">Your ride is currently in progress</p>
+        <p className="text-gray-300">Your ride is currently in progress</p>
       </div>
 
       {error && (
@@ -116,7 +116,7 @@ const ActiveRide = ({ trip, user, onRideEnded, onUserUpdate }) => {
           </div>
           <div>
             <p className="text-sm text-gray-500">Cost</p>
-            <p className="font-semibold text-primary-600">${Number.isFinite(parseFloat(trip.Cost)) ? parseFloat(trip.Cost).toFixed(2) : '0.00'}</p>
+            <p className="font-semibold text-accent-600">₹{Number.isFinite(parseFloat(trip.Cost)) ? parseFloat(trip.Cost).toFixed(2) : '0.00'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Status</p>
@@ -138,8 +138,8 @@ const ActiveRide = ({ trip, user, onRideEnded, onUserUpdate }) => {
               onClick={() => setSelectedEndStation(station)}
               className={`w-full text-left p-4 border-2 rounded-lg transition ${
                 selectedEndStation?.StationID === station.StationID
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-primary-300'
+                  ? 'border-accent-500 bg-accent-50'
+                  : 'border-gray-200 hover:border-accent-300'
               }`}
             >
               <div className="flex justify-between items-center">
@@ -149,7 +149,7 @@ const ActiveRide = ({ trip, user, onRideEnded, onUserUpdate }) => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Capacity</p>
-                  <p className="text-lg font-bold text-primary-600">{station.Capacity}</p>
+                  <p className="text-lg font-bold text-accent-600">{station.Capacity}</p>
                 </div>
               </div>
             </button>
@@ -160,7 +160,7 @@ const ActiveRide = ({ trip, user, onRideEnded, onUserUpdate }) => {
           <button
             onClick={handleEndRide}
             disabled={ending || !selectedEndStation}
-            className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition"
+            className="flex-1 bg-primary-700 hover:bg-primary-800 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition"
           >
             {ending ? 'Ending Ride...' : 'End Ride'}
           </button>

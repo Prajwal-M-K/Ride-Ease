@@ -21,7 +21,8 @@ const Register = () => {
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 1000);
+      // After login, user will be redirected to membership; provide guidance now
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -30,7 +31,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-400 to-primary-600 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-800 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-xl">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -105,7 +106,7 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading || success}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-700 hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 disabled:opacity-50"
             >
               {loading ? 'Registering...' : 'Register'}
             </button>
@@ -114,7 +115,7 @@ const Register = () => {
           <div className="text-center">
             <Link
               to="/login"
-              className="font-medium text-primary-600 hover:text-primary-500"
+              className="font-medium text-accent-600 hover:text-accent-500"
             >
               Already have an account? Sign in here
             </Link>

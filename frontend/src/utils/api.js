@@ -2,11 +2,10 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
+// Let axios set headers per method automatically. Setting Content-Type for GET
+// can cause Flask to try parsing an empty JSON body and return 400.
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Auth APIs
@@ -55,12 +54,13 @@ export const getVehicles = async () => {
   return response.data;
 };
 
-export const addVehicle = async (type, model, manufacturer, ratePerHour, stationId, userRole) => {
+export const addVehicle = async (type, model, manufacturer, ratePerHour, registrationNumber, stationId, userRole) => {
   const response = await api.post('/vehicles', {
     type,
     model,
     manufacturer,
     rate_per_hour: ratePerHour,
+    registration_number: registrationNumber,
     station_id: stationId,
     user_role: userRole,
   });
@@ -142,6 +142,66 @@ export const addReview = async (tripId, rating, comment = '') => {
   const response = await api.post(`/trip/${tripId}/review`, {
     rating,
     comment,
+  });
+  return response.data;
+};
+
+// Membership APIs
+export const getMembershipPlans = async () => {
+  const response = await api.get('/membership/plans');
+  return response.data;
+};
+
+export const purchaseMembership = async (userId, planId) => {
+  const response = await api.post('/membership/purchase', {
+    user_id: userId,
+    plan_id: planId,
+  });
+  return response.data;
+};
+
+// Technician APIs (Admin only)
+export const getTechnicians = async (userRole) => {
+  const response = await api.get('/technicians', {
+    params: { user_role: userRole }
+  });
+  return response.data;
+};
+
+export const addTechnician = async (name, specialization, userRole) => {
+  const response = await api.post('/technicians', {
+    name,
+    specialization,
+    user_role: userRole,
+  });
+  return response.data;
+};
+
+export const updateTechnician = async (technicianId, updates, userRole) => {
+  const response = await api.put(`/technicians/${technicianId}`, {
+    ...updates,
+    user_role: userRole,
+  });
+  return response.data;
+};
+
+export const deleteTechnician = async (technicianId, userRole) => {
+  const response = await api.delete(`/technicians/${technicianId}`, {
+    data: { user_role: userRole }
+  });
+  return response.data;
+};
+
+export const getTechnicianAssignments = async (userRole) => {
+  const response = await api.get('/technicians/assignments', {
+    params: { user_role: userRole }
+  });
+  return response.data;
+};
+
+export const completeMaintenanceLog = async (logId, userRole) => {
+  const response = await api.put(`/maintenance-logs/${logId}/complete`, {
+    user_role: userRole,
   });
   return response.data;
 };

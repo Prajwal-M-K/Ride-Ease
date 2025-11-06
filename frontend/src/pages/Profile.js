@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserProfile, updateUserProfile, addToWallet } from '../utils/api';
 
 const Profile = ({ user, onUserUpdate }) => {
@@ -14,11 +14,7 @@ const Profile = ({ user, onUserUpdate }) => {
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [loadingWallet, setLoadingWallet] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [user.UserID]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const data = await getUserProfile(user.UserID);
       setProfile(data);
@@ -30,7 +26,11 @@ const Profile = ({ user, onUserUpdate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.UserID]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleUpdateProfile = async () => {
     if (password && password !== confirmPassword) {
@@ -73,7 +73,7 @@ const Profile = ({ user, onUserUpdate }) => {
 
     try {
       await addToWallet(user.UserID, amount);
-      setSuccess(`Successfully added $${amount.toFixed(2)} to wallet`);
+      setSuccess(`Successfully added ₹${amount.toFixed(2)} to wallet`);
       setWalletAmount('');
       fetchProfile();
       if (onUserUpdate) {
@@ -121,7 +121,7 @@ const Profile = ({ user, onUserUpdate }) => {
           {!editing && (
             <button
               onClick={() => setEditing(true)}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              className="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded-md text-sm font-medium"
             >
               Edit Profile
             </button>
@@ -174,7 +174,7 @@ const Profile = ({ user, onUserUpdate }) => {
               <button
                 onClick={handleUpdateProfile}
                 disabled={loadingUpdate}
-                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium"
+                className="bg-primary-700 hover:bg-primary-800 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium"
               >
                 {loadingUpdate ? 'Saving...' : 'Save Changes'}
               </button>
@@ -215,8 +215,8 @@ const Profile = ({ user, onUserUpdate }) => {
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Wallet Balance</h2>
         <div className="mb-4">
-          <p className="text-3xl font-bold text-primary-600">
-            ${Number.isFinite(parseFloat(profile?.WalletBalance)) ? parseFloat(profile.WalletBalance).toFixed(2) : '0.00'}
+          <p className="text-3xl font-bold text-accent-600">
+            ₹{Number.isFinite(parseFloat(profile?.WalletBalance)) ? parseFloat(profile.WalletBalance).toFixed(2) : '0.00'}
           </p>
         </div>
         <div className="flex space-x-3">
@@ -232,7 +232,7 @@ const Profile = ({ user, onUserUpdate }) => {
           <button
             onClick={handleAddToWallet}
             disabled={loadingWallet || !walletAmount}
-            className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-md font-medium"
+            className="bg-primary-700 hover:bg-primary-800 disabled:bg-gray-400 text-white px-6 py-2 rounded-md font-medium"
           >
             {loadingWallet ? 'Adding...' : 'Add Funds'}
           </button>

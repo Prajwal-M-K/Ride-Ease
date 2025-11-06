@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserRides, addReview } from '../utils/api';
 
 const MyRides = ({ user }) => {
@@ -11,11 +11,7 @@ const MyRides = ({ user }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    fetchRides();
-  }, []);
-
-  const fetchRides = async () => {
+  const fetchRides = useCallback(async () => {
     try {
       const data = await getUserRides(user.UserID);
       setRides(data);
@@ -24,7 +20,11 @@ const MyRides = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchRides();
+  }, [fetchRides]);
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return 'N/A';
@@ -106,7 +106,7 @@ const MyRides = ({ user }) => {
           <p className="text-gray-500 mb-4">You haven't taken any rides yet.</p>
           <a
             href="/book"
-            className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-md transition"
+            className="inline-block bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-6 rounded-md transition"
           >
             Book Your First Ride
           </a>
@@ -149,12 +149,12 @@ const MyRides = ({ user }) => {
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 <div>
                   <p className="text-sm text-gray-500">Total Cost</p>
-                  <p className="text-2xl font-bold text-primary-600">${Number.isFinite(parseFloat(ride.Cost)) ? parseFloat(ride.Cost).toFixed(2) : '0.00'}</p>
+                  <p className="text-2xl font-bold text-accent-600">₹{Number.isFinite(parseFloat(ride.Cost)) ? parseFloat(ride.Cost).toFixed(2) : '0.00'}</p>
                 </div>
                 {ride.Status === 'Completed' && (
                   <button
                     onClick={() => openReviewModal(ride)}
-                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+                    className="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded-md text-sm font-medium transition"
                   >
                     Leave Review
                   </button>
@@ -208,7 +208,7 @@ const MyRides = ({ user }) => {
               <button
                 onClick={handleSubmitReview}
                 disabled={submittingReview}
-                className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition"
+                className="flex-1 bg-primary-700 hover:bg-primary-800 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition"
               >
                 {submittingReview ? 'Submitting...' : 'Submit Review'}
               </button>

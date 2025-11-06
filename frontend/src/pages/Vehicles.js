@@ -10,14 +10,13 @@ const Vehicles = ({ user }) => {
   const [reportModal, setReportModal] = useState({ open: false, vehicleId: null, vehicleName: '' });
   const [issueDescription, setIssueDescription] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newVehicle, setNewVehicle] = useState({ type: '', model: '', manufacturer: '', ratePerHour: '', stationId: '' });
-  const [ongoingRides, setOngoingRides] = useState([]);
+  const [newVehicle, setNewVehicle] = useState({ type: '', model: '', manufacturer: '', ratePerHour: '', registrationNumber: '', stationId: '' });
+  
 
   useEffect(() => {
     fetchVehicles();
     if (user) {
       fetchStations();
-      fetchOngoingRides();
     }
   }, [user]);
 
@@ -43,15 +42,7 @@ const Vehicles = ({ user }) => {
     }
   };
 
-  const fetchOngoingRides = async () => {
-    if (!user) return;
-    try {
-      const rides = await fetch(`/api/user/${user.UserID}/rides?status=Ongoing`).then(r => r.json());
-      setOngoingRides(rides);
-    } catch (err) {
-      console.error('Failed to load ongoing rides:', err);
-    }
-  };
+  // Removed unused ongoing rides fetch to avoid lint warnings
 
   const handleDecommission = async (vehicleId, vehicleName) => {
     if (!window.confirm(`Are you sure you want to decommission ${vehicleName}? This action cannot be undone.`)) {
@@ -78,11 +69,12 @@ const Vehicles = ({ user }) => {
         newVehicle.model,
         newVehicle.manufacturer,
         parseFloat(newVehicle.ratePerHour),
+        newVehicle.registrationNumber,
         newVehicle.stationId || null,
         user?.Role
       );
       setSuccess('Vehicle added successfully.');
-      setNewVehicle({ type: '', model: '', manufacturer: '', ratePerHour: '', stationId: '' });
+      setNewVehicle({ type: '', model: '', manufacturer: '', ratePerHour: '', registrationNumber: '', stationId: '' });
       setShowAddModal(false);
       fetchVehicles();
       setTimeout(() => setSuccess(''), 3000);
@@ -113,7 +105,7 @@ const Vehicles = ({ user }) => {
       setSuccess(`Issue reported for ${reportModal.vehicleName}. A technician has been assigned.`);
       closeReportModal();
       fetchVehicles();
-      fetchOngoingRides();
+      // No-op: backend validates reporting permissions
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to report issue');
@@ -161,7 +153,7 @@ const Vehicles = ({ user }) => {
         {isAdmin && (
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md font-medium"
+            className="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded-md font-medium"
           >
             + Add Vehicle
           </button>
@@ -201,7 +193,7 @@ const Vehicles = ({ user }) => {
                 <div className="mb-4 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Rate per hour:</span>
-                    <span className="text-sm font-semibold text-gray-900">${vehicle.RatePerHour}</span>
+                    <span className="text-sm font-semibold text-gray-900">₹{vehicle.RatePerHour}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Current Station:</span>
@@ -252,7 +244,7 @@ const Vehicles = ({ user }) => {
             <div className="flex space-x-3">
               <button
                 onClick={handleReportIssue}
-                className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition"
+                className="flex-1 bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded-md transition"
               >
                 Report Issue
               </button>
@@ -304,7 +296,18 @@ const Vehicles = ({ user }) => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rate per Hour ($)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+                <input
+                  type="text"
+                  value={newVehicle.registrationNumber}
+                  onChange={(e) => setNewVehicle({ ...newVehicle, registrationNumber: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="KA-01-AB-1234"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rate per Hour (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -331,7 +334,7 @@ const Vehicles = ({ user }) => {
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition"
+                  className="flex-1 bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded-md transition"
                 >
                   Add Vehicle
                 </button>
@@ -339,7 +342,7 @@ const Vehicles = ({ user }) => {
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
-                    setNewVehicle({ type: '', model: '', manufacturer: '', ratePerHour: '', stationId: '' });
+                    setNewVehicle({ type: '', model: '', manufacturer: '', ratePerHour: '', registrationNumber: '', stationId: '' });
                   }}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md transition"
                 >

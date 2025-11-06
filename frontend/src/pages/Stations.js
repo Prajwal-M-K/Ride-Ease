@@ -78,7 +78,7 @@ const Stations = ({ user }) => {
         {isAdmin && (
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md font-medium"
+            className="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded-md font-medium"
           >
             + Add Station
           </button>
@@ -120,7 +120,7 @@ const Stations = ({ user }) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Available Vehicles</p>
-                    <p className="text-lg font-semibold text-primary-600">{station.AvailableVehicles}</p>
+                    <p className="text-lg font-semibold text-accent-600">{station.AvailableVehicles}</p>
                   </div>
                 </div>
                 {isAdmin && (
@@ -177,7 +177,7 @@ const Stations = ({ user }) => {
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition"
+                  className="flex-1 bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded-md transition"
                 >
                   Add Station
                 </button>
